@@ -290,6 +290,28 @@ export default function HomePage() {
           <Typography variant="muted">
             Explore engaging games created by educators around the world
           </Typography>
+
+          {/* Test Mock Game Button */}
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <Typography
+              variant="small"
+              className="text-yellow-800 mb-2 font-semibold"
+            >
+              🧪 Testing Mode
+            </Typography>
+            <Typography variant="muted" className="mb-3 text-sm">
+              Klik tombol di bawah untuk mencoba game "Type the Answer" dengan
+              data mock (tanpa perlu backend API)
+            </Typography>
+            <Button
+              onClick={() =>
+                (window.location.href = "/type-the-answer/play/mock-game-123")
+              }
+              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+            >
+              🎮 Test Type the Answer Game
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-8">

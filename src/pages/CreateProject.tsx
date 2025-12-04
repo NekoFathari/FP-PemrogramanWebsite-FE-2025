@@ -61,6 +61,8 @@ export default function CreateProject() {
   const handleTemplateClick = (template: GameTemplate) => {
     if (template.slug === "quiz") {
       navigate("/create-quiz");
+    } else if (template.slug === "type-the-answer") {
+      navigate("/create-type-the-answer");
     } else {
       toast.error(`${template.name} template is coming soon!`, {
         duration: 3000,
