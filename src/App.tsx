@@ -33,7 +33,10 @@ function App() {
           <Route path="/my-projects" element={<MyProjectsPage />} />
           <Route path="/create-projects" element={<CreateProject />} />
           <Route path="/create-quiz" element={<CreateQuiz />} />
-          <Route path="/create-pair-or-no-pair" element={<CreatePairOrNoPair />} />
+          <Route
+            path="/create-pair-or-no-pair"
+            element={<CreatePairOrNoPair />}
+          />
           <Route path="/quiz/edit/:id" element={<EditQuiz />} />
         </Route>
       </Routes>
