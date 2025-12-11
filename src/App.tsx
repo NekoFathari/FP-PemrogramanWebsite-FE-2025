@@ -17,6 +17,7 @@ import CreatePairOrNoPair from "./pages/pair-or-no-pair/create";
 
 import CreateCrossword from "./pages/crosswords/create";
 import PlayCrossword from "./pages/crosswords/index";
+import EditCrossword from "./pages/crosswords/edit";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             element={<CreatePairOrNoPair />}
           />
           <Route path="/create-crossword" element={<CreateCrossword />} />
+          <Route path="/crossword/edit/:id" element={<EditCrossword />} />
 
           <Route path="/quiz/edit/:id" element={<EditQuiz />} />
         </Route>
