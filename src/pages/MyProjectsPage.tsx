@@ -211,19 +211,17 @@ export default function MyProjectsPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-6 md:mt-2">
-                  {project.is_published ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7"
-                      onClick={() => {
-                        navigate(getPlayRoute(project));
-                      }}
-                    >
-                      <Play />
-                      Play
-                    </Button>
-                  ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7"
+                    onClick={() => {
+                      navigate(getPlayRoute(project));
+                    }}
+                  >
+                    <Play />
+                    Play
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

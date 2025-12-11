@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "@/api/axios";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import * as Progress from "@radix-ui/react-progress";
 import { InteractiveBackground } from "@/components/ui/interactive-background";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface Question {
   question_text: string;
@@ -36,6 +37,7 @@ interface TypeTheAnswerData {
 function TypeTheAnswer() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { token } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,9 +90,35 @@ function TypeTheAnswer() {
       try {
         setLoading(true);
 
-        const response = await api.get(
-          `/api/game/game-type/type-the-answer/${id}/play/public`,
-        );
+        let response;
+
+        // Try private endpoint first if user is authenticated (for owner preview or published game)
+        if (token) {
+          try {
+            response = await api.get(
+              `/api/game/game-type/type-the-answer/${id}/play/private`,
+            );
+          } catch (privateErr: unknown) {
+            // If private fails (user not owner), try public endpoint
+            const err = privateErr as { response?: { status?: number } };
+            if (
+              err?.response?.status === 403 ||
+              err?.response?.status === 401
+            ) {
+              response = await api.get(
+                `/api/game/game-type/type-the-answer/${id}/play/public`,
+              );
+            } else {
+              throw privateErr;
+            }
+          }
+        } else {
+          // No token, use public endpoint directly
+          response = await api.get(
+            `/api/game/game-type/type-the-answer/${id}/play/public`,
+          );
+        }
+
         setGame(response.data.data);
         setTimeRemaining(response.data.data.time_limit_seconds);
       } catch (err) {
@@ -103,12 +131,7 @@ function TypeTheAnswer() {
     };
 
     if (id) fetchGame();
-  }, [id]);
-
-  const handleTimeUp = useCallback(() => {
-    toast.error("Time's up!");
-    submitGame(userAnswers);
-  }, [userAnswers]);
+  }, [id, token]);
 
   // Timer logic
   useEffect(() => {
@@ -117,7 +140,8 @@ function TypeTheAnswer() {
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          handleTimeUp();
+          toast.error("Time's up!");
+          submitGame(userAnswers);
           return 0;
         }
         return prev - 1;
@@ -127,7 +151,7 @@ function TypeTheAnswer() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [gameStarted, isPaused, finished, handleTimeUp]);
+  }, [gameStarted, isPaused, finished, userAnswers]);
 
   const startGame = () => {
     setGameStarted(true);
@@ -184,19 +208,7 @@ function TypeTheAnswer() {
       if (!confirm) return;
     }
 
-    // Add play count when exiting
-    await addPlayCount(id!);
     navigate("/");
-  };
-
-  const addPlayCount = async (gameId: string) => {
-    try {
-      await api.post("/api/game/play-count", {
-        game_id: gameId,
-      });
-    } catch (err) {
-      console.error("Failed to update play count:", err);
-    }
   };
 
   const submitGame = async (finalAnswers: typeof userAnswers) => {
@@ -217,8 +229,8 @@ function TypeTheAnswer() {
 
       setResult(response.data.data);
 
-      // Fetch leaderboard and add play count in parallel
-      await Promise.all([addPlayCount(id!), fetchLeaderboard()]);
+      // Fetch leaderboard
+      await fetchLeaderboard();
 
       setFinished(true);
     } catch (err) {
