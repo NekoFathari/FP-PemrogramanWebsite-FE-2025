@@ -72,16 +72,12 @@ export default function MyProjectsPage() {
     }
   };
 
-  const handleUpdateStatus = async (
-    projectTemplate: string,
-    gameId: string,
-    isPublish: boolean,
-  ) => {
+  const handleUpdateStatus = async (gameId: string, isPublish: boolean) => {
     try {
-      const form = new FormData();
-      form.append("is_publish", String(isPublish));
-
-      await api.patch(`/api/game/game-type/${projectTemplate}/${gameId}`, form);
+      await api.patch("/api/game/", {
+        game_id: gameId,
+        is_publish: isPublish,
+      });
 
       setProjects((prev) =>
         prev.map((p) =>
@@ -221,11 +217,7 @@ export default function MyProjectsPage() {
                       size="sm"
                       className="h-7"
                       onClick={() => {
-                        handleUpdateStatus(
-                          project.game_template_slug,
-                          project.id,
-                          false,
-                        );
+                        handleUpdateStatus(project.id, false);
                       }}
                     >
                       <EyeOff />
@@ -237,11 +229,7 @@ export default function MyProjectsPage() {
                       size="sm"
                       className="h-7"
                       onClick={() => {
-                        handleUpdateStatus(
-                          project.game_template_slug,
-                          project.id,
-                          true,
-                        );
+                        handleUpdateStatus(project.id, true);
                       }}
                     >
                       <Eye />
