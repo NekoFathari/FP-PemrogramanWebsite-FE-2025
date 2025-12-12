@@ -123,11 +123,12 @@ export const togglePublishHangman = async (
   gameId: string,
   isPublish: boolean,
 ) => {
-  const payload = { is_publish: isPublish ? "true" : "false" };
-  console.log("Toggle publish API call:", { gameId, isPublish, payload });
+  const form = new FormData();
+  form.append("is_publish", String(isPublish));
+  console.log("Toggle publish API call:", { gameId, isPublish });
   const response = await api.patch(
     `/api/game/game-type/hangman/${gameId}`,
-    payload,
+    form,
   );
   console.log("Toggle publish response:", response.data);
   return response.data;

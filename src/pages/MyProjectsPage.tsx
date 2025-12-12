@@ -78,30 +78,10 @@ export default function MyProjectsPage() {
     isPublish: boolean,
   ) => {
     try {
-      if (projectTemplate === "hangman") {
-        if (isPublish) {
-          // Publish using PATCH
-          const form = new FormData();
-          form.append("is_publish", "true");
-          await api.patch(
-            `/api/game/game-type/${projectTemplate}/${gameId}`,
-            form,
-          );
-        } else {
-          // Unpublish using POST
-          await api.post(
-            `/api/game/game-type/${projectTemplate}/${gameId}/unpublish`,
-          );
-        }
-      } else {
-        // Other game types use PATCH
-        const form = new FormData();
-        form.append("is_publish", String(isPublish));
-        await api.patch(
-          `/api/game/game-type/${projectTemplate}/${gameId}`,
-          form,
-        );
-      }
+      const form = new FormData();
+      form.append("is_publish", String(isPublish));
+
+      await api.patch(`/api/game/game-type/${projectTemplate}/${gameId}`, form);
 
       setProjects((prev) =>
         prev.map((p) =>

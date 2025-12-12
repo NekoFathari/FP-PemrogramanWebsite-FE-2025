@@ -7,6 +7,7 @@ import { WordDisplay } from "@/components/hangman/WordDisplay";
 import { Keyboard } from "@/components/hangman/Keyboard";
 import { GameCompletionModal } from "@/components/hangman/GameCompletionModal";
 import { ShowAnswersModal } from "@/components/hangman/ShowAnswersModal";
+import "./hangman.css";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -136,13 +137,13 @@ function HangmanGame() {
 
   // Timer effect
   useEffect(() => {
-    if (gameStatus === "playing" && gameStarted) {
+    if (gameStatus === "playing" && gameStarted && !isPauseModalOpen) {
       const timer = setInterval(() => {
         setTimeElapsed((prev) => prev + 1);
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameStatus, gameStarted]);
+  }, [gameStatus, gameStarted, isPauseModalOpen]);
 
   const currentQuestion = questions[currentQuestionIndex];
 
