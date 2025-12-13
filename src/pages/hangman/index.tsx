@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/api/axios";
 import toast from "react-hot-toast";
+import { useAuthStore } from "@/store/useAuthStore";
 import { HangmanFigure } from "@/components/hangman/HangmanFigure";
 import { WordDisplay } from "@/components/hangman/WordDisplay";
 import { Keyboard } from "@/components/hangman/Keyboard";
@@ -45,6 +46,7 @@ const POINTS_PER_CORRECT = 10;
 function HangmanGame() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const token = useAuthStore((state) => state.token);
 
   // Game State
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -87,10 +89,10 @@ function HangmanGame() {
   >(new Map());
 
   // Audio refs
-  const correctSound = new Audio("/src/pages/hangman/audio/correct.mp3");
-  const wrongSound = new Audio("/src/pages/hangman/audio/wrong.mp3");
-  const completeSound = new Audio("/src/pages/hangman/audio/win.mp3");
-  const gameOverSound = new Audio("/src/pages/hangman/audio/lose.mp3");
+  const correctSound = new Audio("/src/assets/game/hangman/audio/correct.mp3");
+  const wrongSound = new Audio("/src/assets/game/hangman/audio/wrong.mp3");
+  const completeSound = new Audio("/src/assets/game/hangman/audio/win.mp3");
+  const gameOverSound = new Audio("/src/assets/game/hangman/audio/lose.mp3");
 
   // Increment play count
   const addPlayCount = async (gameId: string) => {
@@ -107,10 +109,24 @@ function HangmanGame() {
   useEffect(() => {
     const fetchGameTemplate = async () => {
       try {
-        const response = await api.get(`/api/game/game-type/hangman/${id}`);
-        setQuestions(response.data.data.questions);
-        setGameTitle(response.data.data.name);
-        setCreatorUsername(response.data.data.creator_username);
+        let endpoint = `/api/game/game-type/hangman/${id}`;
+
+        // Use public endpoint if not authenticated
+        if (!token) {
+          endpoint = `/api/game/game-type/hangman/${id}/play/public`;
+        }
+
+        const response = await api.get(endpoint);
+        const gameData = response.data.data;
+
+        // Handle both full game data and public game data
+        const questionsData =
+          gameData.questions || gameData.game_json?.questions || [];
+        setQuestions(questionsData);
+        setGameTitle(gameData.name);
+        setCreatorUsername(
+          gameData.creator_username || gameData.creator?.username || "Unknown",
+        );
         setLoading(false);
       } catch (error) {
         console.error("Error fetching game:", error);
@@ -133,7 +149,7 @@ function HangmanGame() {
       fetchGameTemplate();
       fetchLeaderboard();
     }
-  }, [id, navigate]);
+  }, [id, navigate, token]);
 
   // Timer effect
   useEffect(() => {
@@ -257,21 +273,28 @@ function HangmanGame() {
         setGameStatus("lost");
         setIsGameOverPreview(true);
         // Save score to backend with time and refresh leaderboard
-        Promise.all([
-          saveGameResult(id!, score, timeElapsed),
-          addPlayCount(id!),
-        ])
+        const savePromises = [addPlayCount(id!)];
+        if (score > 0) {
+          savePromises.push(saveGameResult(id!, score, timeElapsed));
+        }
+
+        Promise.all(savePromises)
           .then(() => {
             // Auto-refresh leaderboard after save
             return getHangmanLeaderboard(id!, 10);
           })
           .then((updatedLeaderboard) => {
             setLeaderboard(updatedLeaderboard);
-            toast.success("Score saved!", { duration: 2000 });
+            if (score > 0) {
+              toast.success("Score saved!", { duration: 2000 });
+            }
           })
           .catch((err) => {
             console.error("Failed to save game result:", err);
-            toast.error("Failed to save score");
+            // Only show error if we actually tried to save score
+            if (score > 0) {
+              toast.error("Failed to save score");
+            }
           });
         // Briefly show hangman hanged before modal
         setTimeout(() => {
@@ -324,21 +347,28 @@ function HangmanGame() {
         setGameStatus("won");
         setIsCompletionModalOpen(true);
         // Save score to backend with time and refresh leaderboard
-        Promise.all([
-          saveGameResult(id!, newScore, timeElapsed),
-          addPlayCount(id!),
-        ])
+        const savePromises = [addPlayCount(id!)];
+        if (newScore > 0) {
+          savePromises.push(saveGameResult(id!, newScore, timeElapsed));
+        }
+
+        Promise.all(savePromises)
           .then(() => {
             // Auto-refresh leaderboard after save
             return getHangmanLeaderboard(id!, 10);
           })
           .then((updatedLeaderboard) => {
             setLeaderboard(updatedLeaderboard);
-            toast.success("Score saved!", { duration: 2000 });
+            if (newScore > 0) {
+              toast.success("Score saved!", { duration: 2000 });
+            }
           })
           .catch((err) => {
             console.error("Failed to save game result:", err);
-            toast.error("Failed to save score");
+            // Only show error if we actually tried to save score
+            if (newScore > 0) {
+              toast.error("Failed to save score");
+            }
           });
         return;
       }
@@ -519,7 +549,7 @@ function HangmanGame() {
                           <span className="text-slate-300 text-xs">
                             {entry.timeTaken !== null &&
                             entry.timeTaken !== undefined
-                              ? formatTime(entry.timeTaken)
+                              ? `⏱️ ${formatTime(entry.timeTaken)}`
                               : "-"}
                           </span>
                         </div>
@@ -766,7 +796,10 @@ function HangmanGame() {
                   {leaderboard[1] ? (
                     <div className="bg-slate-100 rounded-2xl p-4 border border-slate-200 shadow-md">
                       <div className="text-lg font-bold text-slate-500">#2</div>
-                      <div className="text-base font-semibold text-slate-800 mt-1">
+                      <div
+                        className="text-base font-semibold text-slate-800 mt-1 truncate max-w-full block"
+                        title={leaderboard[1].username}
+                      >
                         {leaderboard[1].username}
                       </div>
                       <div className="text-sm text-slate-600">
@@ -788,7 +821,10 @@ function HangmanGame() {
                   {/* 1st place */}
                   <div className="bg-gradient-to-br from-amber-300 via-amber-200 to-amber-100 rounded-2xl p-5 border border-amber-200 shadow-xl scale-[1.07]">
                     <div className="text-2xl font-black text-amber-800">#1</div>
-                    <div className="text-lg font-bold text-amber-900 mt-1">
+                    <div
+                      className="text-lg font-bold text-amber-900 mt-1 truncate max-w-full block"
+                      title={leaderboard[0]?.username}
+                    >
                       {leaderboard[0]?.username || "-"}
                     </div>
                     <div className="text-base text-amber-800 font-semibold">
@@ -806,7 +842,10 @@ function HangmanGame() {
                   {leaderboard[2] ? (
                     <div className="bg-slate-100 rounded-2xl p-4 border border-slate-200 shadow-md">
                       <div className="text-lg font-bold text-slate-500">#3</div>
-                      <div className="text-base font-semibold text-slate-800 mt-1">
+                      <div
+                        className="text-base font-semibold text-slate-800 mt-1 truncate max-w-full block"
+                        title={leaderboard[2].username}
+                      >
                         {leaderboard[2].username}
                       </div>
                       <div className="text-sm text-slate-600">
@@ -840,7 +879,10 @@ function HangmanGame() {
                       <span className="font-bold text-slate-400 w-8">
                         #{index + 4}
                       </span>
-                      <span className="font-medium text-slate-700">
+                      <span
+                        className="font-medium text-slate-700 truncate block max-w-[150px]"
+                        title={entry.username}
+                      >
                         {entry.username}
                       </span>
                     </div>

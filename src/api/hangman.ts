@@ -43,7 +43,9 @@ export const createHangmanTemplate = async (data: CreateTemplateData) => {
     formData.append("thumbnail_image", data.thumbnail);
   }
 
-  const response = await api.post(`/api/game/game-type/hangman`, formData);
+  const response = await api.post(`/api/game/game-type/hangman`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 
   return response.data;
 };
@@ -98,11 +100,16 @@ export const updateHangmanTemplate = async (
     formData.append("score_per_question", String(data.score_per_question));
   if (data.questions)
     formData.append("questions", JSON.stringify(data.questions));
+  if (data.is_publish_immediately !== undefined)
+    formData.append("is_publish", String(data.is_publish_immediately));
   if (data.thumbnail) formData.append("thumbnail_image", data.thumbnail);
 
-  const response = await api.put(
+  const response = await api.patch(
     `/api/game/game-type/hangman/${gameId}`,
     formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    },
   );
 
   return response.data;
@@ -123,14 +130,14 @@ export const togglePublishHangman = async (
   gameId: string,
   isPublish: boolean,
 ) => {
-  const form = new FormData();
-  form.append("is_publish", String(isPublish));
-  console.log("Toggle publish API call:", { gameId, isPublish });
   const response = await api.patch(
     `/api/game/game-type/hangman/${gameId}`,
-    form,
+    (() => {
+      const formData = new FormData();
+      formData.append("is_publish", String(isPublish));
+      return formData;
+    })(),
   );
-  console.log("Toggle publish response:", response.data);
   return response.data;
 };
 

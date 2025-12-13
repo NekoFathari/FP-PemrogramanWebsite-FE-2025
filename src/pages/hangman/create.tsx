@@ -42,13 +42,15 @@ function CreateHangmanTemplate() {
           setTitle(data.name || "");
           setDescription(data.description || "");
           setQuestions(
-            data.questions?.map((q: { question: string; answer: string }) => ({
-              question: q.question,
-              answer: q.answer,
-            })) || [],
+            data.game_json?.questions?.map(
+              (q: { question: string; answer: string }) => ({
+                question: q.question,
+                answer: q.answer,
+              }),
+            ) || [],
           );
-          setIsQuestionShuffled(!!data.is_question_shuffled);
-          setScorePerQuestion(data.score_per_question || 10);
+          setIsQuestionShuffled(!!data.game_json?.is_question_shuffled);
+          setScorePerQuestion(data.game_json?.score_per_question || 10);
           setExistingThumbnailUrl(
             data.thumbnail_image
               ? `${import.meta.env.VITE_API_URL}/${data.thumbnail_image}`
@@ -120,6 +122,7 @@ function CreateHangmanTemplate() {
             question: q.question,
             answer: q.answer.toUpperCase().trim(),
           })),
+          is_publish_immediately: publish,
           ...(thumbnail && { thumbnail }),
         });
       } else {

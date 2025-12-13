@@ -64,13 +64,9 @@ function App() {
             path="/create-pair-or-no-pair"
             element={<CreatePairOrNoPair />}
           />
-<<<<<<< HEAD
           <Route path="/create-hangman" element={<CreateHangmanTemplate />} />
           <Route path="/hangman/edit/:id" element={<CreateHangmanTemplate />} />
-          <Route path="/quiz/edit/:id" element={<EditQuiz />} />
-=======
           <Route path="/create-maze-chase" element={<CreateMazeChase />} />
->>>>>>> 68772152ab3c9cf780ffd72a087750beaea25c38
           <Route path="/create-anagram" element={<CreateAnagram />} />
           <Route path="/quiz/edit/:id" element={<EditQuiz />} />
           <Route
