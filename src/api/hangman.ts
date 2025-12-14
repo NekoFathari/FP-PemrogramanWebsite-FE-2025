@@ -1,4 +1,5 @@
 import api from "./axios";
+import { useAuthStore } from "@/store/useAuthStore";
 
 interface HangmanQuestion {
   question: string;
@@ -43,8 +44,11 @@ export const createHangmanTemplate = async (data: CreateTemplateData) => {
     formData.append("thumbnail_image", data.thumbnail);
   }
 
+  const token = useAuthStore.getState().token;
   const response = await api.post(`/api/game/game-type/hangman`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return response.data;
@@ -54,7 +58,10 @@ export const createHangmanTemplate = async (data: CreateTemplateData) => {
  * Get a hangman template by ID
  */
 export const getHangmanTemplate = async (gameId: string) => {
-  const response = await api.get(`/api/game/game-type/hangman/${gameId}`);
+  const token = useAuthStore.getState().token;
+  const response = await api.get(`/api/game/game-type/hangman/${gameId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
@@ -74,10 +81,12 @@ export const getAllHangmanTemplates = async (userId?: string) => {
  * Get user's hangman templates
  */
 export const getUserHangmanTemplates = async () => {
+  const token = useAuthStore.getState().token;
   const response = await api.get(`/api/game/game-type/hangman`, {
     params: {
       userId: localStorage.getItem("userId"),
     },
+    headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
@@ -104,11 +113,14 @@ export const updateHangmanTemplate = async (
     formData.append("is_publish", String(data.is_publish_immediately));
   if (data.thumbnail) formData.append("thumbnail_image", data.thumbnail);
 
+  const token = useAuthStore.getState().token;
   const response = await api.patch(
     `/api/game/game-type/hangman/${gameId}`,
     formData,
     {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
   );
 
@@ -119,7 +131,10 @@ export const updateHangmanTemplate = async (
  * Delete a hangman template
  */
 export const deleteHangmanTemplate = async (gameId: string) => {
-  const response = await api.delete(`/api/game/game-type/hangman/${gameId}`);
+  const token = useAuthStore.getState().token;
+  const response = await api.delete(`/api/game/game-type/hangman/${gameId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
@@ -130,6 +145,7 @@ export const togglePublishHangman = async (
   gameId: string,
   isPublish: boolean,
 ) => {
+  const token = useAuthStore.getState().token;
   const response = await api.patch(
     `/api/game/game-type/hangman/${gameId}`,
     (() => {
@@ -137,6 +153,9 @@ export const togglePublishHangman = async (
       formData.append("is_publish", String(isPublish));
       return formData;
     })(),
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
   );
   return response.data;
 };
@@ -145,8 +164,13 @@ export const togglePublishHangman = async (
  * Unpublish a hangman game
  */
 export const unpublishHangman = async (gameId: string) => {
+  const token = useAuthStore.getState().token;
   const response = await api.post(
     `/api/game/game-type/hangman/${gameId}/unpublish`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
   );
   return response.data;
 };
