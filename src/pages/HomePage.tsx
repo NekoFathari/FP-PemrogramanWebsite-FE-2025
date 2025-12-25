@@ -501,7 +501,7 @@ export default function HomePage() {
                   All Types
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {gameTemplates.map((template) => (
+                {gameTemplates?.map((template) => (
                   <DropdownMenuItem
                     key={template.id}
                     onClick={() =>
